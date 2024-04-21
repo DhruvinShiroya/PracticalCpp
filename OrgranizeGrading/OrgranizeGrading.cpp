@@ -6,7 +6,15 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iomanip>
+
 using namespace std;
+
+struct Student_info {
+    string name;
+    double midterm, final;
+    vector<double> homework;
+};
+
 
 // this midter , final , homework is call by value when we call this function it copies the argumnet for fucntion and when function return it destroys created arguments.
 double grade(double midterm, double final, double homework) {
@@ -50,40 +58,53 @@ istream& read_hw(istream& in, vector<double>& hw) {
     return in;
 }
 
+istream& read(istream& is, Student_info& s) {
+    // read and store the students name and mmidterm and final exam grades
+    is >> s.name >> s.midterm >> s.final;
+    read_hw(is, s.homework);
+    return is;
+}
+
+double grade(Student_info& s) {
+    return grade(s.midterm, s.final, s.homework);
+}
+
+bool compare_student(const Student_info& x, const Student_info& y) {
+    return x.name < y.name;
+}
 
 
 int main()
 {
-    // ask for and read student's name
-    cout << "Please enter your first name;";
-    string name;
-    cin >> name;
-    cout << "Hello, " << name << endl;
+    vector<Student_info> students;
+    Student_info record;
+    string::size_type maxlen = 0;
 
-    // ask for and read the midter and final grades 
-    cout << "Please enter your midterm and final grades: ";
-    double midterm, final;
-    cin >> midterm >> final;
+    // read and store the record and find the length of longest name
+    while (read(cin, record)) {
+        maxlen = max(maxlen, record.name.size());
+        students.push_back(record);
+    }
+
+    //sort the students by name
+    sort(students.begin(), students.end(), compare_student);
     
-    // ask for homework grades
-    cout << "Enter all your homework grades, followedby end of file: ";
-    vector<double> homework;
+    for (vector<Student_info>::size_type i = 0; i != students.size(); ++i) {
+        // write name with correct padding for final grade
+        cout << students[i].name << string((maxlen + 1) - students[i].name.size(), ' ');
 
-    read_hw(cin, homework);
-
-    // compute and generate the final grade
-    try {
-        double final_grade = grade(midterm, final, homework);
-        streamsize prec = cout.precision();
-        cout << "Your final grade is " << setprecision(3)
-            << final_grade << setprecision(prec) << endl;
+        // compute and print grade
+        try {
+            double final_grade = grade(students[i]);
+            streamsize prec = cout.precision();
+            cout << setprecision(4) << final_grade << setprecision(prec) ;
+        }
+        catch (domain_error e) {
+            cout << e.what();
+        }
+        cout << endl;
     }
-    catch (domain_error) {
-        cout << endl << "You must enter your grades . "
-            "Please try again." << endl;
-        return 1;
-    }
-    return 0;
+   return 0;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
